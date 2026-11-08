@@ -88,6 +88,17 @@ describe('normalizeIp', () => {
     expect(normalizeIp('2001:db8:0:1:dead:beef:1:2', Number(undefined))).toBe(expected);
   });
 
+  it('honours a prefix given as a numeric string, e.g. read from the environment', () => {
+    expect(normalizeIp('2001:db8:0:1::1', '48' as unknown as number)).toBe('2001:db8::/48');
+    expect(normalizeIp('2001:db8:0:1::1', ' 56 ' as unknown as number)).toBe('2001:db8::/56');
+  });
+
+  it('falls back to the default prefix when given a non-numeric string', () => {
+    const expected = normalizeIp('2001:db8:0:1:dead:beef:1:2');
+    expect(normalizeIp('2001:db8:0:1:dead:beef:1:2', '' as unknown as number)).toBe(expected);
+    expect(normalizeIp('2001:db8:0:1:dead:beef:1:2', 'abc' as unknown as number)).toBe(expected);
+  });
+
   it('strips the zone index so it cannot widen the keyspace', () => {
     expect(normalizeIp('fe80::1%eth0')).toBe(normalizeIp('fe80::2%eth1'));
   });

@@ -180,10 +180,16 @@ export function normalizeIp(
     return [hextets[6] >> 8, hextets[6] & 0xff, hextets[7] >> 8, hextets[7] & 0xff].join('.');
   }
 
+  // A prefix read from the environment arrives as a string (`ConfigService.get<number>()`
+  // does not convert it), which `Number.isFinite()` rejects outright.
+  const requested: unknown = ipv6SubnetPrefix;
+  const prefixLength =
+    typeof requested === 'string' && requested.trim() !== '' ? Number(requested) : requested;
   // A non-finite prefix (`Number(undefined)` from an unset env var, say) must
   // fall back to the default rather than silently leaving every bit in place.
-  const prefix = Number.isFinite(ipv6SubnetPrefix)
-    ? Math.min(Math.max(Math.trunc(ipv6SubnetPrefix), 0), 128)
-    : DEFAULT_IPV6_SUBNET_PREFIX;
+  const prefix =
+    typeof prefixLength === 'number' && Number.isFinite(prefixLength)
+      ? Math.min(Math.max(Math.trunc(prefixLength), 0), 128)
+      : DEFAULT_IPV6_SUBNET_PREFIX;
   return `${formatIpv6(maskHextets(hextets, prefix))}/${prefix}`;
 }
